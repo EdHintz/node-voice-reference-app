@@ -1,0 +1,179 @@
+<html>
+	<head>
+		<script src="//d23gfec6haquvp.cloudfront.net/0.5.0/stage/BWClient.js"></script>
+		<script src="static/jquery-2.1.4.min.js"></script>
+		<link rel="stylesheet" type="text/css" href="static/style.css">
+		<link rel="stylesheet" type="text/css" href="static\font-awesome-4.3.0\font-awesome-4.3.0\css\font-awesome.min.css">
+	</head>
+	<body>
+		<audio id="remote-audio"></audio>
+		<div id="wrapper">
+		    <div id="incomingCall" style="display: none">
+		        <div class="callInfo">
+		            <h3>Incoming Call</h3>
+		            <p id="incomingCallNumber">Unknown</p>
+		        </div>
+		        <div id="answer"> <i class="fa fa-phone"></i></div>
+		        <div id="reject"> <i class="fa fa-phone"></i></div>
+		    </div>
+		    <div id="callStatus" style="display: none">
+		        <div class="callInfo">
+		             <h3 id="callInfoText">info text goes here</h3>
+		            <p id="callInfoNumber">info number goes here</p>
+		        </div>
+		        <div id="hangUp"> <i class="fa fa-phone"></i>
+
+		        </div>
+		        <div id="answer" style="display: none"> <i class="fa fa-phone"></i>
+
+		        </div>
+		        <div id="reject" style="display: none"> <i class="fa fa-phone"></i>
+
+		        </div>
+		    </div>
+		    <div id="inCallButtons" style="display: none">
+		        <div id="dialPad">
+		            <div class="dialpad-char" data-value="1" unselectable="on">1</div>
+		            <div class="dialpad-char" data-value="2" unselectable="on">2</div>
+		            <div class="dialpad-char" data-value="3" unselectable="on">3</div>
+		            <div class="dialpad-char" data-value="4" unselectable="on">4</div>
+		            <div class="dialpad-char" data-value="5" unselectable="on">5</div>
+		            <div class="dialpad-char" data-value="6" unselectable="on">6</div>
+		            <div class="dialpad-char" data-value="7" unselectable="on">7</div>
+		            <div class="dialpad-char" data-value="8" unselectable="on">8</div>
+		            <div class="dialpad-char" data-value="9" unselectable="on">9</div>
+		            <div class="dialpad-char" data-value="*" unselectable="on">*</div>
+		            <div class="dialpad-char" data-value="0" unselectable="on">0</div>
+		            <div class="dialpad-char" data-value="#" unselectable="on">#</div>
+		        </div>
+		        <div id="mute">
+		            <i id="muteIcon" class="fa fa-microphone"></i>
+		        </div>
+		    </div>
+		<div id="callControl">
+		    <div id="to">
+		        <input id="toField" type="text" placeholder="Enter number here"/>
+		    </div>
+		    <div id="connectCall"> <i class="fa fa-phone"></i>
+		    </div>
+		</div>
+		</div>
+
+		<script>
+			console.log("TEST");
+			var config = {
+				authToken: "{{authToken}}" || undefined,
+				password: "{{password}}" || undefined,
+				username: "{{username}}" || undefined,
+			    domain: "nathantest2.bwapp-stage.stage.bwsip.io",
+			    logLevel: "debug"
+			};
+
+			var phone;
+			phone = BWClient.createPhone(config);
+			phone.register();
+			phone.on("incomingCall",function(incomingCall){
+				if(call){//hangup any existing call
+					call.hangup();
+					call=null;
+				}
+				call = incomingCall;
+				call.on("ended",function(){
+					call = null;
+					updateUI();
+				});
+				call.on("connected",updateUI);
+				updateUI();
+			});
+
+			var call;
+			updateUI();
+
+			$("#connectCall").click(function () {
+				console.log("connect call clicked");
+			    var dest = $("#toField").val();
+			    call = phone.call(dest);
+			    call.setRemoteAudioElement(document.getElementById("remote-audio"));
+			    call.on("connected", updateUI);
+			    call.on("ended", function(){
+			        call = null;
+			        updateUI();
+			    });
+			    updateUI();
+			});
+
+
+			$('#answer').click(function(){
+			    call.setRemoteAudioElement(document.getElementById("remote-audio"));
+			    call.accept();
+			});
+			$('#reject').click(function(){
+			    console.log("REJECT");
+			    call.reject();
+			});
+			$("#hangUp").click(function(){
+			    call.hangup();
+			    call = null;
+			    updateUI();
+			});
+			$("#mute").click(function(){
+			    console.log("MUTE CLICKED");
+			    if(call.getInfo().microphoneMuted){
+			        call.unmute();
+			    }else{
+			        call.mute();   
+			    }
+			    updateUI();
+			});
+			$("#toField").keypress(function(e){
+			    if(e.which === 13){//enter
+			        $("#connectCall").click();
+			    }
+			});
+			$("#inCallButtons").on("click", ".dialpad-char", function (e) {
+			    var $target = $(e.target);
+			    var value = $target.data("value");
+			    call.sendDtmf(value.toString());
+			});
+			function updateUI(){
+				$("#wrapper").show();
+				if(call){
+					var info = call.getInfo();
+					if(info.status === "connecting"){
+					if(info.direction === "in"){
+					$("#incomingCallNumber").html(info.remoteName);
+					$("#incomingCall").show();
+					$("#callControl").hide()  
+					$("#incomingCall").show();
+				}else{
+					$("#callInfoText").html("Ringing...");
+					$("#callInfoNumber").html(info.remoteName);
+					$("#callStatus").show();                   
+				}
+
+				}else if(info.status === "connected"){
+					$("#callStatus").show();
+					$("#incomingCall").hide();
+					$("#callInfoText").html("In Call");
+					$("#callInfoNumber").html(info.remoteName);
+					$("#inCallButtons").show();
+				}
+					$("#callControl").hide();
+				}else{
+					$("#incomingCall").hide();
+					$("#callControl").show();
+					$("#callStatus").hide();
+					$("#inCallButtons").hide();
+				}
+				//microphone mute icon
+				if(call && call.getInfo().microphoneMuted){
+					$("#muteIcon").addClass("fa-microphone-slash");
+					$("#muteIcon").removeClass("fa-microphone");
+				}else{
+					$("#muteIcon").removeClass("fa-microphone-slash");
+					$("#muteIcon").addClass("fa-microphone");
+				}
+			}
+		</script>
+	</body>
+</html>

@@ -8,10 +8,13 @@ var thenifyAll = require("thenify-all");
 var randomstring = require("randomstring");
 var fs = require("mz/fs");
 var debug = require("debug")("voice");
+var NunjucksHapi = require('nunjucks-hapi');
+var Promise = require("bluebird");
 
 var server = new Hapi.Server(); //server instance
 
 // configure Catapult API
+catapult.Client.globalOptions.apiEndPoint = "https://api.stage.catapult.inetwork.com";
 catapult.Client.globalOptions.userId = config.catapultUserId;
 catapult.Client.globalOptions.apiToken = config.catapultApiToken;
 catapult.Client.globalOptions.apiSecret = config.catapultApiSecret;
@@ -31,6 +34,14 @@ thenifyAll.withCallback(server, server, ["start", "register"]);
 
 
 server.connection({ port: process.env.PORT || 3000, host: process.env.HOST || "0.0.0.0" });
+
+// set up templates 
+server.views({
+  engines: {
+    html: NunjucksHapi
+  },
+  path: path.join(__dirname, 'views')
+})
 
 // file to store users data
 var usersPath = path.join(__dirname, "users.json");
@@ -283,6 +294,30 @@ server.route({
     }
     reply(boom.notFound());
   }
+});
+
+//GET /calldemo
+server.route({
+  method: "GET",
+  path: "/calldemo",
+  handler: function (req, reply) {
+    reply.view("calldemo", {
+      username: "uep-fhFasMxCpvT3",
+      //authToken: "tokentokentoken",
+      password: "123456"
+    });
+  }
+});
+
+//static file server
+server.route({
+    method: 'GET',
+    path: '/static/{param*}',
+    handler: {
+        directory: {
+            path: 'static'
+        }
+    }
 });
 
 fs.exists(usersPath)
