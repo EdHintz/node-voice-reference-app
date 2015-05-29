@@ -184,7 +184,16 @@ server.route({
 	path: "/",
 	method: "GET",
 	handler: function(req, reply){
-		reply.file('signon.html');
+		reply.file('createuser.html');
+	}
+});
+
+//GET /
+server.route({
+	path: "/css/{file}",
+	method: "GET",
+	handler: function(req, reply){
+		reply.file('css/'+req.params.file);
 	}
 });
 
