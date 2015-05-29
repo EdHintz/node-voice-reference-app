@@ -24,6 +24,7 @@ var Application = thenifyAll(catapult.Application);
 var AvailableNumber = thenifyAll(catapult.AvailableNumber);
 var PhoneNumber = thenifyAll(catapult.PhoneNumber);
 var Domain = thenifyAll(catapult.Domain);
+var EndPoint = thenifyAll(catapult.EndPoint);
 var Call = thenifyAll(catapult.Call);
 var Bridge = thenifyAll(catapult.Bridge);
 catapult.PhoneNumber.prototype = thenifyAll(catapult.PhoneNumber.prototype);
@@ -210,11 +211,32 @@ server.route({
 		};
 		createUser(user)
 		.then(function(){
+      console.log("USER:", user);
+      return domain.getEndPoint(user.endpoint.id);
+		})
+    .then(function(endpoint){
+      return new Promise(function(resolve, reject){
+        endpoint.createAuthToken(function(err, data){
+          if(err){
+            reject(err);
+          }
+          resolve(data);
+        });
+      });
+    })
+    .then(function(authToken){
+      console.log("username:", user.endpoint.credentials.username);
+      console.log("authToken:", authToken.token);
 
-		});
-		reply("login endpoint: Hi " + req.payload.userName);
-	}
-	});
+
+      reply.view("calldemo", {
+        username: user.endpoint.credentials.username,
+        //authToken: authToken.token,
+        password: "123456"
+      });
+  	});
+  }
+});
 
 
 //POST /users
@@ -326,19 +348,6 @@ server.route({
       });
     }
     reply(boom.notFound());
-  }
-});
-
-//GET /calldemo
-server.route({
-  method: "GET",
-  path: "/calldemo",
-  handler: function (req, reply) {
-    reply.view("calldemo", {
-      username: "uep-fhFasMxCpvT3",
-      //authToken: "tokentokentoken",
-      password: "123456"
-    });
   }
 });
 
