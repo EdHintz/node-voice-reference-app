@@ -202,15 +202,6 @@ server.route({
 
 //GET /
 server.route({
-	path: "/css/{file}",
-	method: "GET",
-	handler: function(req, reply){
-		reply.file('css/'+req.params.file);
-	}
-});
-
-//GET /
-server.route({
 	path: "/login",
 	method: "post",
 	handler: function(req, reply){
@@ -240,8 +231,8 @@ server.route({
 
       reply.view("calldemo", {
         username: user.endpoint.credentials.username,
-        //authToken: authToken.token,
-        password: "123456"
+        authToken: authToken.token,
+        //password: "123456"
       });
   	});
   }
