@@ -92,7 +92,8 @@ function createUser(user){
 		delete user.endpoint.client;
 		// save a created user
 		users[user.userName] = user;
-		return saveUsers();
+		saveUsers();
+		return user;
 	});
 }
 
@@ -200,6 +201,18 @@ server.route({
 	}
 });
 
+function getOrCreateUser(user){
+	if (users[user.userName]) {
+		// user already exists, use the existing endpoint
+		return new Promise(function(resolve){
+			resolve(users[user.userName]);
+		});
+	}
+	else {
+		return createUser(user);
+	}
+}
+
 //GET /
 server.route({
 	path: "/login",
@@ -209,33 +222,33 @@ server.route({
 			userName : req.payload.userName,
 			password : req.payload.userPassword
 		};
-		createUser(user)
-		.then(function(){
-      console.log("USER:", user);
-      return domain.getEndPoint(user.endpoint.id);
+		getOrCreateUser(user)
+		.then(function(endPointuser){
+		console.log("USER:", endPointuser);
+			user = endPointuser;
+			return domain.getEndPoint(user.endpoint.id);
 		})
-    .then(function(endpoint){
-      return new Promise(function(resolve, reject){
-        endpoint.createAuthToken(function(err, data){
-          if(err){
-            reject(err);
-          }
-          resolve(data);
-        });
-      });
-    })
-    .then(function(authToken){
-      console.log("username:", user.endpoint.credentials.username);
-      console.log("authToken:", authToken.token);
+        .then(function(endpoint){
+	      return new Promise(function(resolve, reject){
+	        endpoint.createAuthToken(function(err, data){
+	          if(err){
+	            reject(err);
+	          }
+	          resolve(data);
+	        });
+	      });
+        })
+        .then(function(authToken){
+	      console.log("username:", user.endpoint.name);
+	      console.log("authToken:", authToken.token);
 
 
-      reply.view("calldemo", {
-        username: user.endpoint.credentials.username,
-        authToken: authToken.token,
-        //password: "123456"
-      });
-  	});
-  }
+	      reply.view("calldemo", {
+	        username: user.endpoint.name,
+	        authToken: authToken.token,
+	      });
+	  	});
+    }
 });
 
 
