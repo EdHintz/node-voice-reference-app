@@ -204,9 +204,7 @@ server.route({
 function getOrCreateUser(user){
 	if (users[user.userName]) {
 		// user already exists, use the existing endpoint
-		return new Promise(function(resolve){
-			resolve(users[user.userName]);
-		});
+		return Promise.resolve(users[user.userName]);
 	}
 	else {
 		return createUser(user);
@@ -225,7 +223,7 @@ server.route({
 		};
 		getOrCreateUser(user)
 		.then(function(endPointuser){
-		console.log("USER:", endPointuser);
+			console.log("USER:", endPointuser);
 			user = endPointuser;
 			return domain.getEndPoint(user.endpoint.id);
 		})
@@ -242,8 +240,6 @@ server.route({
         .then(function(authToken){
 	      console.log("username:", user.endpoint.name);
 	      console.log("authToken:", authToken.token);
-
-
 	      reply.view("calldemo", {
 	        username: user.endpoint.name,
 	        authToken: authToken.token,
