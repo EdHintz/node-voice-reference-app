@@ -197,7 +197,7 @@ server.route({
 	path: "/",
 	method: "GET",
 	handler: function(req, reply){
-		reply.file('createuser.html');
+		reply.file('signin.html');
 	}
 });
 
@@ -218,9 +218,10 @@ server.route({
 	path: "/login",
 	method: "post",
 	handler: function(req, reply){
+		// Give user random password
 		var user = {
 			userName : req.payload.userName,
-			password : req.payload.userPassword
+			password : (Math.random() + 1).toString(36).substring(7)
 		};
 		getOrCreateUser(user)
 		.then(function(endPointuser){
