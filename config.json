@@ -1,7 +1,7 @@
 {
- "domain": "",
- "baseUrl": "",
- "catapultUserId": "",
- "catapultApiToken": "",
- "catapultApiSecret": ""
+ "domain": "nathantest2",
+ "baseUrl": "http://6563e32b.ngrok.io",
+ "catapultUserId": "u-u3rfpp7ylhmncjus6uhxwgy",
+ "catapultApiToken": "t-qymf5sn5rqh2kzvu4qsvrlq",
+ "catapultApiSecret": "ta3n5wg2o4if6swrhhyoqc7wisvfbtawwxt7vmq"
 }

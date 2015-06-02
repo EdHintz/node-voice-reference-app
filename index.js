@@ -8,19 +8,23 @@ var thenifyAll = require("thenify-all");
 var randomstring = require("randomstring");
 var fs = require("mz/fs");
 var debug = require("debug")("voice");
+var NunjucksHapi = require('nunjucks-hapi');
+var Promise = require("bluebird");
 
 var server = new Hapi.Server(); //server instance
 
 // configure Catapult API
+catapult.Client.globalOptions.apiEndPoint = "https://api.stage.catapult.inetwork.com";
 catapult.Client.globalOptions.userId = config.catapultUserId;
 catapult.Client.globalOptions.apiToken = config.catapultApiToken;
 catapult.Client.globalOptions.apiSecret = config.catapultApiSecret;
-
+catapult.Client.globalOptions.apiEndPoint = "https://api.stage.catapult.inetwork.com";
 //wrap Catapult API functions. Make them thenable (i.e. they will use Promises intead of callbacks)
 var Application = thenifyAll(catapult.Application);
 var AvailableNumber = thenifyAll(catapult.AvailableNumber);
 var PhoneNumber = thenifyAll(catapult.PhoneNumber);
 var Domain = thenifyAll(catapult.Domain);
+var EndPoint = thenifyAll(catapult.EndPoint);
 var Call = thenifyAll(catapult.Call);
 var Bridge = thenifyAll(catapult.Bridge);
 catapult.PhoneNumber.prototype = thenifyAll(catapult.PhoneNumber.prototype);
@@ -31,6 +35,14 @@ thenifyAll.withCallback(server, server, ["start", "register"]);
 
 
 server.connection({ port: process.env.PORT || 3000, host: process.env.HOST || "0.0.0.0" });
+
+// set up templates 
+server.views({
+  engines: {
+    html: NunjucksHapi
+  },
+  path: path.join(__dirname, 'views')
+})
 
 // file to store users data
 var usersPath = path.join(__dirname, "users.json");
@@ -44,6 +56,44 @@ var bridges = {};
 
 function saveUsers(){
   return fs.writeFile(usersPath, JSON.stringify(users));
+}
+
+function createUser(user){
+	return Application.create({
+		name: user.userName,
+		incomingCallUrl: config.baseUrl + "/users/" + encodeURIComponent(user.userName) + "/callback",
+		autoAnswer: false
+	})
+	.then(function(application){
+		user.application = application;
+		//search an available number
+		return AvailableNumber.searchLocal({state: "NC", quantity: 1});
+	})
+	.then(function(numbers){
+		// and reserve it
+		user.phoneNumber = numbers[0].number;
+		return PhoneNumber.create({number: user.phoneNumber, applicationId: user.application.id});
+	})
+	.then(function(){
+		//create an endpoint
+		return domain.createEndPoint({
+			name: "uep-" + randomstring.generate(12),
+			description: "Sandbox created Endpoint for user " + user.userName,
+			domainId: domain.id,
+			applicationId: user.application.id,
+			enabled: true,
+			credentials: {password: user.password}
+		});
+	})
+	.then(function(endpoint){
+		user.endpoint = endpoint;
+		//remove 'specific' data to be saved
+		delete user.application.client;
+		delete user.endpoint.client;
+		// save a created user
+		users[user.userName] = user;
+		return saveUsers();
+	});
 }
 
 function formatUser(user){
@@ -141,6 +191,54 @@ server.ext("onPostHandler", function(req, reply){
 
 // Routes
 
+//GET /
+server.route({
+	path: "/",
+	method: "GET",
+	handler: function(req, reply){
+		reply.file('createuser.html');
+	}
+});
+
+//GET /
+server.route({
+	path: "/login",
+	method: "post",
+	handler: function(req, reply){
+		var user = {
+			userName : req.payload.userName,
+			password : req.payload.userPassword
+		};
+		createUser(user)
+		.then(function(){
+      console.log("USER:", user);
+      return domain.getEndPoint(user.endpoint.id);
+		})
+    .then(function(endpoint){
+      return new Promise(function(resolve, reject){
+        endpoint.createAuthToken(function(err, data){
+          if(err){
+            reject(err);
+          }
+          resolve(data);
+        });
+      });
+    })
+    .then(function(authToken){
+      console.log("username:", user.endpoint.credentials.username);
+      console.log("authToken:", authToken.token);
+
+
+      reply.view("calldemo", {
+        username: user.endpoint.credentials.username,
+        authToken: authToken.token,
+        //password: "123456"
+      });
+  	});
+  }
+});
+
+
 //POST /users
 server.route({
   path: "/users",
@@ -148,41 +246,7 @@ server.route({
   handler: function(req, reply){
     var user = req.payload;
     //create an application for user
-    Application.create({
-      name: user.userName,
-      incomingCallUrl: config.baseUrl + "/users/" + encodeURIComponent(user.userName) + "/callback",
-      autoAnswer: false
-    })
-    .then(function(application){
-      user.application = application;
-      //search an available number
-      return AvailableNumber.searchLocal({state: "NC", quantity: 1});
-    })
-    .then(function(numbers){
-      // and reserve it
-      user.phoneNumber = numbers[0].number;
-      return PhoneNumber.create({number: user.phoneNumber, applicationId: user.application.id});
-    })
-    .then(function(){
-      //create an endpoint
-      return domain.createEndPoint({
-        name: "uep-" + randomstring.generate(12),
-        description: "Sandbox created Endpoint for user " + user.userName,
-        domainId: domain.id,
-        applicationId: user.application.id,
-        enabled: true,
-        credentials: {password: user.password}
-      });
-    })
-    .then(function(endpoint){
-      user.endpoint = endpoint;
-      //remove 'specific' data to be saved
-      delete user.application.client;
-      delete user.endpoint.client;
-      // save a created user
-      users[user.userName] = user;
-      return saveUsers();
-    })
+	createUser(user)
     .then(function(){
       reply(formatUser(user)).created(config.baseUrl + "/users/" + encodeURIComponent(user.userName));
     })
@@ -199,6 +263,8 @@ server.route({
     }
   }
 });
+
+
 
 //GET /users/{userName}
 server.route({
@@ -283,6 +349,17 @@ server.route({
     }
     reply(boom.notFound());
   }
+});
+
+//static file server
+server.route({
+    method: 'GET',
+    path: '/static/{param*}',
+    handler: {
+        directory: {
+            path: 'static'
+        }
+    }
 });
 
 fs.exists(usersPath)
