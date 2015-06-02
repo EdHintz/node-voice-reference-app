@@ -92,7 +92,8 @@ function createUser(user){
 		delete user.endpoint.client;
 		// save a created user
 		users[user.userName] = user;
-		return saveUsers();
+		saveUsers();
+		return user;
 	});
 }
 
@@ -196,46 +197,59 @@ server.route({
 	path: "/",
 	method: "GET",
 	handler: function(req, reply){
-		reply.file('createuser.html');
+		reply.file('signin.html');
 	}
 });
+
+function getOrCreateUser(user){
+	if (users[user.userName]) {
+		// user already exists, use the existing endpoint
+		return new Promise(function(resolve){
+			resolve(users[user.userName]);
+		});
+	}
+	else {
+		return createUser(user);
+	}
+}
 
 //GET /
 server.route({
 	path: "/login",
 	method: "post",
 	handler: function(req, reply){
+		// Give user random password
 		var user = {
 			userName : req.payload.userName,
-			password : req.payload.userPassword
+			password : (Math.random() + 1).toString(36).substring(7)
 		};
-		createUser(user)
-		.then(function(){
-      console.log("USER:", user);
-      return domain.getEndPoint(user.endpoint.id);
+		getOrCreateUser(user)
+		.then(function(endPointuser){
+		console.log("USER:", endPointuser);
+			user = endPointuser;
+			return domain.getEndPoint(user.endpoint.id);
 		})
-    .then(function(endpoint){
-      return new Promise(function(resolve, reject){
-        endpoint.createAuthToken(function(err, data){
-          if(err){
-            reject(err);
-          }
-          resolve(data);
-        });
-      });
-    })
-    .then(function(authToken){
-      console.log("username:", user.endpoint.credentials.username);
-      console.log("authToken:", authToken.token);
+        .then(function(endpoint){
+	      return new Promise(function(resolve, reject){
+	        endpoint.createAuthToken(function(err, data){
+	          if(err){
+	            reject(err);
+	          }
+	          resolve(data);
+	        });
+	      });
+        })
+        .then(function(authToken){
+	      console.log("username:", user.endpoint.name);
+	      console.log("authToken:", authToken.token);
 
 
-      reply.view("calldemo", {
-        username: user.endpoint.credentials.username,
-        authToken: authToken.token,
-        //password: "123456"
-      });
-  	});
-  }
+	      reply.view("calldemo", {
+	        username: user.endpoint.name,
+	        authToken: authToken.token,
+	      });
+	  	});
+    }
 });
 
 
