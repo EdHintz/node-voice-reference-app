@@ -241,8 +241,11 @@ server.route({
 	      console.log("username:", user.endpoint.name);
 	      console.log("authToken:", authToken.token);
 	      reply.view("calldemo", {
-	        username: user.endpoint.name,
-	        authToken: authToken.token,
+	        username:             user.endpoint.name,
+	        authToken:            authToken.token,
+          authTokenDisplayData: JSON.stringify(authToken, null, 3),
+          userData:             JSON.stringify(user, null, 3),
+          phoneNumber:          user.phoneNumber
 	      });
 	  	});
     }
