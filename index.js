@@ -38,10 +38,10 @@ server.connection({ port: process.env.PORT || 3000, host: process.env.HOST || "0
 
 // set up templates 
 server.views({
-  engines: {
-    html: NunjucksHapi
-  },
-  path: path.join(__dirname, 'views')
+	engines: {
+		html: NunjucksHapi
+	},
+	path: path.join(__dirname, 'views')
 })
 
 // file to store users data
@@ -55,7 +55,7 @@ var domain = null;
 var bridges = {};
 
 function saveUsers(){
-  return fs.writeFile(usersPath, JSON.stringify(users));
+	return fs.writeFile(usersPath, JSON.stringify(users));
 }
 
 function createUser(user){
@@ -66,128 +66,128 @@ function createUser(user){
 	})
 	.then(function(application){
 		user.application = application;
-		//search an available number
-		return AvailableNumber.searchLocal({state: "NC", quantity: 1});
-	})
+//search an available number
+return AvailableNumber.searchLocal({state: "NC", quantity: 1});
+})
 	.then(function(numbers){
-		// and reserve it
-		user.phoneNumber = numbers[0].number;
-		return PhoneNumber.create({number: user.phoneNumber, applicationId: user.application.id});
-	})
+// and reserve it
+user.phoneNumber = numbers[0].number;
+return PhoneNumber.create({number: user.phoneNumber, applicationId: user.application.id});
+})
 	.then(function(){
-		//create an endpoint
-		return domain.createEndPoint({
-			name: "uep-" + randomstring.generate(12),
-			description: "Sandbox created Endpoint for user " + user.userName,
-			domainId: domain.id,
-			applicationId: user.application.id,
-			enabled: true,
-			credentials: {password: user.password}
-		});
-	})
+//create an endpoint
+return domain.createEndPoint({
+	name: "uep-" + randomstring.generate(12),
+	description: "Sandbox created Endpoint for user " + user.userName,
+	domainId: domain.id,
+	applicationId: user.application.id,
+	enabled: true,
+	credentials: {password: user.password}
+});
+})
 	.then(function(endpoint){
 		user.endpoint = endpoint;
-		//remove 'specific' data to be saved
-		delete user.application.client;
-		delete user.endpoint.client;
-		// save a created user
-		users[user.userName] = user;
-		saveUsers();
-		return user;
-	});
+//remove 'specific' data to be saved
+delete user.application.client;
+delete user.endpoint.client;
+// save a created user
+users[user.userName] = user;
+saveUsers();
+return user;
+});
 }
 
 function formatUser(user){
-  var k, u = {};
-  for(k in user){
-    if(k === "password" || k === "application") continue;
-    u[k] = user[k];
-  }
-  return u;
+	var k, u = {};
+	for(k in user){
+		if(k === "password" || k === "application") continue;
+		u[k] = user[k];
+	}
+	return u;
 }
 
 // Catapult's event handler
 function processEvent(ev, user){
-  switch(ev.eventType){
-    case "incomingcall":
-      var callbackUrl = config.baseUrl + "/users/" + encodeURIComponent(user.userName) + "/callback";
-      if(user.phoneNumber === ev.to){
-        //incoming call
-        debug("Handle incoming call: call to sip %s", user.endpoint.sipUri);
-        return Call.create({
-          from: user.phoneNumber,
-          to: user.endpoint.sipUri,
-          callbackUrl: callbackUrl,
-          tag: ev.callId
-        });
-      }
-      if(user.endpoint.sipUri.indexOf(ev.from.trim()) >= 0){
-        //outgoing call
-        debug("Handle outgoing call: call to  %s", ev.to);
-        return Call.create({
-          from: user.phoneNumber,
-          to: ev.to,
-          callbackUrl: callbackUrl,
-          tag: ev.callId
-        });
-      }
-      break;
-    case "answer":
-      if(!ev.tag){
-        return Promise.resolve();
-      }
-      return Call.get(ev.tag)
-      .then(function(call){
-        if(call.bridgeId){
-          return Promise.reject();
-        }
-        return (call.state === "active")?Promise.resolve():call.answerOnIncoming();
-      })
-      .then(function(){
-        //create a bridge for both calls
-        return Bridge.create({
-          callIds: [ev.callId, ev.tag],
-          bridgeAudio: true
-        });
-      })
-      .then(function(bridge){
-        bridges[ev.callId] = bridge.id;
-        bridges[ev.tag] = bridge.id;
-      });
-      break;
-    case "hangup":
-      var bridgeId = bridges[ev.callId];
-      if(!bridgeId){
-        return Promise.resolve();
-      }
-      return Bridge.get(bridgeId)
-      .then(function(bridge){
-        return bridge.getCalls();
-      })
-      .then(function(calls){
-        return Promise.all(calls.map(function(c){
-          delete bridges[c.id];
-          if(c.state === "active"){
-            debug("Hangup another call");
-            return c.hangUp();
-          }
-        }));
-      });
-      break;
-  }
+	switch(ev.eventType){
+		case "incomingcall":
+		var callbackUrl = config.baseUrl + "/users/" + encodeURIComponent(user.userName) + "/callback";
+		if(user.phoneNumber === ev.to){
+//incoming call
+debug("Handle incoming call: call to sip %s", user.endpoint.sipUri);
+return Call.create({
+	from: user.phoneNumber,
+	to: user.endpoint.sipUri,
+	callbackUrl: callbackUrl,
+	tag: ev.callId
+});
+}
+if(user.endpoint.sipUri.indexOf(ev.from.trim()) >= 0){
+//outgoing call
+debug("Handle outgoing call: call to  %s", ev.to);
+return Call.create({
+	from: user.phoneNumber,
+	to: ev.to,
+	callbackUrl: callbackUrl,
+	tag: ev.callId
+});
+}
+break;
+case "answer":
+if(!ev.tag){
+	return Promise.resolve();
+}
+return Call.get(ev.tag)
+.then(function(call){
+	if(call.bridgeId){
+		return Promise.reject();
+	}
+	return (call.state === "active")?Promise.resolve():call.answerOnIncoming();
+})
+.then(function(){
+//create a bridge for both calls
+return Bridge.create({
+	callIds: [ev.callId, ev.tag],
+	bridgeAudio: true
+});
+})
+.then(function(bridge){
+	bridges[ev.callId] = bridge.id;
+	bridges[ev.tag] = bridge.id;
+});
+break;
+case "hangup":
+var bridgeId = bridges[ev.callId];
+if(!bridgeId){
+	return Promise.resolve();
+}
+return Bridge.get(bridgeId)
+.then(function(bridge){
+	return bridge.getCalls();
+})
+.then(function(calls){
+	return Promise.all(calls.map(function(c){
+		delete bridges[c.id];
+		if(c.state === "active"){
+			debug("Hangup another call");
+			return c.hangUp();
+		}
+	}));
+});
+break;
+}
 }
 
 // Logs
 
 server.ext("onPreHandler", function(req, reply){
-  server.log(["body"], req.method.toUpperCase() + " " + req.url.path + " request data: " + JSON.stringify(req.payload || {}));
-  reply.continue();
+	server.log(["body"], req.method.toUpperCase() + " " + req.url.path + " request data: " + JSON.stringify(req.payload || {}));
+	reply.continue();
 });
 
 
 server.ext("onPostHandler", function(req, reply){
-  server.log(["body"], req.method.toUpperCase() + " " + req.url.path + " response data: " + JSON.stringify(req.response.source || {}));
-  reply.continue();
+	server.log(["body"], req.method.toUpperCase() + " " + req.url.path + " response data: " + JSON.stringify(req.response.source || {}));
+	reply.continue();
 });
 
 // Routes
@@ -203,12 +203,12 @@ server.route({
 
 function getOrCreateUser(user){
 	if (users[user.userName]) {
-		// user already exists, use the existing endpoint
-		return Promise.resolve(users[user.userName]);
-	}
-	else {
-		return createUser(user);
-	}
+// user already exists, use the existing endpoint
+return Promise.resolve(users[user.userName]);
+}
+else {
+	return createUser(user);
+}
 }
 
 //GET /
@@ -216,211 +216,211 @@ server.route({
 	path: "/login",
 	method: "post",
 	handler: function(req, reply){
-		// Give user random password
-		var user = {
-			userName : req.payload.userName,
-			password : (Math.random() + 1).toString(36).substring(7)
-		};
-		getOrCreateUser(user)
-		.then(function(endPointuser){
-			console.log("USER:", endPointuser);
-			user = endPointuser;
-			return domain.getEndPoint(user.endpoint.id);
-		})
-        .then(function(endpoint){
-	      return new Promise(function(resolve, reject){
-	        endpoint.createAuthToken(function(err, data){
-	          if(err){
-	            reject(err);
-	          }
-	          resolve(data);
-	        });
-	      });
-        })
-        .then(function(authToken){
-	      console.log("username:", user.endpoint.name);
-	      console.log("authToken:", authToken.token);
-	      reply.view("calldemo", {
-	        username:             user.endpoint.name,
-	        authToken:            authToken.token,
-          authTokenDisplayData: JSON.stringify(authToken, null, 3),
-          userData:             JSON.stringify(user, null, 3),
-          phoneNumber:          user.phoneNumber
-	      });
-	  	});
-    }
+// Give user random password
+var user = {
+	userName : req.payload.userName,
+	password : (Math.random() + 1).toString(36).substring(7)
+};
+getOrCreateUser(user)
+.then(function(endPointuser){
+	console.log("USER:", endPointuser);
+	user = endPointuser;
+	return domain.getEndPoint(user.endpoint.id);
+})
+.then(function(endpoint){
+	return new Promise(function(resolve, reject){
+		endpoint.createAuthToken(function(err, data){
+			if(err){
+				reject(err);
+			}
+			resolve(data);
+		});
+	});
+})
+.then(function(authToken){
+	console.log("username:", user.endpoint.name);
+	console.log("authToken:", authToken.token);
+	reply.view("calldemo", {
+		username:             user.endpoint.name,
+		authToken:            authToken.token,
+		authTokenDisplayData: JSON.stringify(authToken, null, 3),
+		userData:             JSON.stringify(user, null, 3),
+		phoneNumber:          user.phoneNumber
+	});
+});
+}
 });
 
 
 //POST /users
 server.route({
-  path: "/users",
-  method: "POST",
-  handler: function(req, reply){
-    var user = req.payload;
-    //create an application for user
-	createUser(user)
-    .then(function(){
-      reply(formatUser(user)).created(config.baseUrl + "/users/" + encodeURIComponent(user.userName));
-    })
-    .catch(function(err){
-      reply(err);
-    });
-  },
-  config: {
-    validate:{
-      payload: Joi.object().keys({
-        userName: Joi.string().required(),
-        password: Joi.string().required()
-      })
-    }
-  }
+	path: "/users",
+	method: "POST",
+	handler: function(req, reply){
+		var user = req.payload;
+//create an application for user
+createUser(user)
+.then(function(){
+	reply(formatUser(user)).created(config.baseUrl + "/users/" + encodeURIComponent(user.userName));
+})
+.catch(function(err){
+	reply(err);
+});
+},
+config: {
+	validate:{
+		payload: Joi.object().keys({
+			userName: Joi.string().required(),
+			password: Joi.string().required()
+		})
+	}
+}
 });
 
 
 
 //GET /users/{userName}
 server.route({
-  path: "/users/{userName}",
-  method: "GET",
-  handler: function(req, reply){
-    var user = users[req.params.userName];
-    if(user){
-      return reply(formatUser(user));
-    }
-    reply(boom.notFound());
-  }
+	path: "/users/{userName}",
+	method: "GET",
+	handler: function(req, reply){
+		var user = users[req.params.userName];
+		if(user){
+			return reply(formatUser(user));
+		}
+		reply(boom.notFound());
+	}
 });
 
 
 //PUT /users/{userName}
 server.route({
-  path: "/users/{userName}",
-  method: "PUT",
-  handler: function(req, reply){
-    var k, body = req.payload || {};
-    var user = users[req.params.userName];
-    if(user){
-      for(k in body){
-        user[k] = body[k];
-      }
-      return saveUsers().then(function(){
-        reply("");
-      }, function(err){
-        reply(err);
-      });
-    }
-    reply(boom.notFound());
-  }
+	path: "/users/{userName}",
+	method: "PUT",
+	handler: function(req, reply){
+		var k, body = req.payload || {};
+		var user = users[req.params.userName];
+		if(user){
+			for(k in body){
+				user[k] = body[k];
+			}
+			return saveUsers().then(function(){
+				reply("");
+			}, function(err){
+				reply(err);
+			});
+		}
+		reply(boom.notFound());
+	}
 });
 
 
 //DELETE /users/{userName}
 server.route({
-  path: "/users/{userName}",
-  method: "DELETE",
-  handler: function(req, reply){
-    var user = users[req.params.userName];
-    if(user){
-      var phoneNumber = user.phoneNumber;
-      delete users[req.params.userName];
-      return saveUsers()
-      .then(function(){
-        return PhoneNumber.get(phoneNumber);
-      })
-      .then(function(number){
-        if(number){
-          return number.delete();
-        }
-      })
-      .then(function(){
-        reply("");
-      }, function(err){
-        reply(err);
-      });
-    }
-    reply(boom.notFound());
-  }
+	path: "/users/{userName}",
+	method: "DELETE",
+	handler: function(req, reply){
+		var user = users[req.params.userName];
+		if(user){
+			var phoneNumber = user.phoneNumber;
+			delete users[req.params.userName];
+			return saveUsers()
+			.then(function(){
+				return PhoneNumber.get(phoneNumber);
+			})
+			.then(function(number){
+				if(number){
+					return number.delete();
+				}
+			})
+			.then(function(){
+				reply("");
+			}, function(err){
+				reply(err);
+			});
+		}
+		reply(boom.notFound());
+	}
 });
 
 
 //POST /users/{userName}/callback
 server.route({
-  path: "/users/{userName}/callback",
-  method: "POST",
-  handler: function(req, reply){
-    var user = users[req.params.userName];
-    if(user){
-      var ev = req.payload;
-      debug(ev);
-      processEvent(ev, user).then(function(){
-        reply("");
-      }, function(err){
-        console.error("Callback error:" + err.message);
-        reply("");
-      });
-    }
-    reply(boom.notFound());
-  }
+	path: "/users/{userName}/callback",
+	method: "POST",
+	handler: function(req, reply){
+		var user = users[req.params.userName];
+		if(user){
+			var ev = req.payload;
+			debug(ev);
+			processEvent(ev, user).then(function(){
+				reply("");
+			}, function(err){
+				console.error("Callback error:" + err.message);
+				reply("");
+			});
+		}
+		reply(boom.notFound());
+	}
 });
 
 //static file server
 server.route({
-    method: 'GET',
-    path: '/static/{param*}',
-    handler: {
-        directory: {
-            path: 'static'
-        }
-    }
+	method: 'GET',
+	path: '/static/{param*}',
+	handler: {
+		directory: {
+			path: 'static'
+		}
+	}
 });
 
 fs.exists(usersPath)
 .then(function(exists){
-  if(exists){
-    debug("Read users data from json file");
-    return fs.readFile(usersPath);
-  }
-  return "{}";
+	if(exists){
+		debug("Read users data from json file");
+		return fs.readFile(usersPath);
+	}
+	return "{}";
 })
 .then(function(json){
-  debug("Parse users json data");
-  users = JSON.parse(json);
-  debug("Loaded %d users", Object.keys(users).length);
-  return Domain.list();
+	debug("Parse users json data");
+	users = JSON.parse(json);
+	debug("Loaded %d users", Object.keys(users).length);
+	return Domain.list();
 })
 .then(function(domains){
-  var dm = domains.filter(function(d){
-    return d.name === config.domain;
-  })[0];
-  if(dm){
-    debug("Using existing domain %s", dm.name);
-    return dm;
-  }
-  debug("Creating a domain %s", config.domain);
-  return Domain.create({name: config.domain});
+	var dm = domains.filter(function(d){
+		return d.name === config.domain;
+	})[0];
+	if(dm){
+		debug("Using existing domain %s", dm.name);
+		return dm;
+	}
+	debug("Creating a domain %s", config.domain);
+	return Domain.create({name: config.domain});
 })
 .then(function(d){
-  domain = d;
-  return server.register({
-    register: require("good"),
-    options: {
-    opsInterval: 10000,
-      reporters: [{
-          reporter: require("good-console"),
-          events: { log: "*", response: "*", request: "*", error: "*" }
-      }]
-    }
-  });
+	domain = d;
+	return server.register({
+		register: require("good"),
+		options: {
+			opsInterval: 10000,
+			reporters: [{
+				reporter: require("good-console"),
+				events: { log: "*", response: "*", request: "*", error: "*" }
+			}]
+		}
+	});
 })
 .then(function(){
-  debug("Start the server");
-  return server.start();
+	debug("Start the server");
+	return server.start();
 })
 .then(function(){
-  console.log("Server running at:", server.info.uri);
+	console.log("Server running at:", server.info.uri);
 })
 .catch(function(err){
-    return console.error(err);
+	return console.error(err);
 });
 
