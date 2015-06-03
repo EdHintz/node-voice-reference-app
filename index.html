@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<title>Voice Reference App</title>
+
+		<!-- icons -->
+		<link rel="apple-touch-icon" href="static/img/apple-touch-icon.png">
+		<link rel="shortcut icon" href="http://catapult.inetwork.com/images/favicon.ico?v=2">
+
+		<!-- Bootstrap Core CSS file -->
+		<link rel="stylesheet" href="static/css/bootstrap.min.css">
+
+		<!-- Override CSS file - add your own CSS rules -->
+		<link rel="stylesheet" href="static/css/styles.css">
+
+		<!-- Conditional comment containing JS files for IE6 - 8 -->
+		<!--[if lt IE 9]>
+			<script src="static/js/html5.js"></script>
+			<script src="static/js/respond.min.js"></script>
+		<![endif]-->
+	</head>
+	<body>
+
+		<!-- Navigation -->
+	    <nav class="navbar navbar-fixed-top navbar-inverse" role="navigation">
+			<div class="container-fluid">
+
+				<!-- Brand and toggle get grouped for better mobile display -->
+				<div class="navbar-header">
+					<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+						<span class="sr-only">Toggle navigation</span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+						<span class="icon-bar"></span>
+					</button>
+					<a class="navbar-brand" href="http://bandwidth.com"><img src="static/img/logo.png" alt="Bandwidth"></a>
+				</div>
+				<!-- /.navbar-header -->
+
+				<!-- Collect the nav links, forms, and other content for toggling -->
+				<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+					<ul class="nav navbar-nav">
+                        <li><a href="https://github.com/bandwidthcom">SDKs</a></li>
+                        <li><a href="https://github.com/bandwidthexamples">Examples</a></li>
+					</ul>
+				</div>
+				<!-- /.navbar-collapse -->
+			</div>
+			<!-- /.container-fluid -->
+		</nav>
+		<!-- /.navbar -->
+
+		<!-- Page Content -->
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-sm-12">
+
+					<!-- Page Heading -->
+					<h1>Bandwidth Application Platform Voice Reference App</h1>
+					<hr>
+
+<p class="lead">
+    Demonstrates how to implement voice calling for mobile devices, browsers (WebRTC), and any SIP client using the Bandwidth
+    Application Platform.
+    This reference application makes creating, registering, and implementing voice calling for endpoints (mobile, web, or any SIP client) easy.
+    This application implements the steps documented <a href="http://ap.bandwidth.com/docs/how-to-guides/use-endpoints-make-receive-calls-sip-clients/">here</a>.
+</p>
+<p class="lead">
+    This reference app includes an example of voice calling in a web browser via WebRTC (see below).  Voice calling from a mobile device requires
+    a mobile reference app (see <a href="https://github.com/bandwidthcom/catapult-reference-app-voice-android">Android</a>, <a href="https://github.com/bandwidthcom/catapult-reference-app-voice-ios">iOS</a>) running on the device.
+</p>
+					<hr>
+
+<h2>Run the App</h2>
+<p>Type in a name below to begin voice calling from your web browser.  You will also see the authorization token, endpoint, and SIP configuration data.</p>
+<div class="login-form">
+    <h3>Sign In</h3>
+    <form action="login" method="post">
+        <input type="text" name="userName" placeholder="User name">
+        <input type="submit" name="login" value="Sign In" class="login login-submit">
+    </form>
+    Will create user if needed.
+</div>
+
+		<!-- JQuery scripts -->
+	    <script src="static/js/jquery-1.11.2.min.js"></script>
+
+		<!-- Bootstrap Core scripts -->
+		<script src="static/js/bootstrap.min.js"></script>
+  </body>
+</html>

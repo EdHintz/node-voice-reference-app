@@ -3,7 +3,7 @@
 /* CSS Document */
  html, body {
     margin: 0;
-    padding: 0;
+/*     padding: 0; */
     font-family:'Open Sans', sans-serif;
     color: #494949;
 }
@@ -11,6 +11,12 @@
     width: 300px;
     margin: 0 auto;
 }
+
+#endpointData {
+    width: 700px;
+    margin: 0 auto;
+}
+
 .callInfo {
     width: 190px;
     height: 70px;

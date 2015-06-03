@@ -208,7 +208,7 @@ server.route({
 	path: "/",
 	method: "GET",
 	handler: function(req, reply) {
-		reply.file('signin.html');
+		reply.file('index.html');
 	}
 });
 
