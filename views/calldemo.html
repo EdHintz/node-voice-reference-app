@@ -7,7 +7,9 @@
 	</head>
 	<body>
 		<audio id="remote-audio"></audio>
+		
 		<div id="wrapper">
+
 		    <div id="incomingCall" style="display: none">
 		        <div class="callInfo">
 		            <h3>Incoming Call</h3>
@@ -56,8 +58,22 @@
 		    </div>
 		    <div id="connectCall"> <i class="fa fa-phone"></i>
 		    </div>
+		    <div id="phoneNumberDisplay">
+				<h4>Phone Number</h4>
+				<pre>{{phoneNumber}}</pre>
+			</div>
+		    <div id="authTokenDisplayData">
+		    	<h4>Auth Token</h4>
+				<pre>{{authTokenDisplayData}}</pre>
+			</div>
+			<div id="userData">
+		    	<h4>User Data</h4>
+				<pre>{{userData}}</pre>
+			</div>
 		</div>
+
 		</div>
+
 
 		<script>
 			console.log("TEST");
