@@ -39,12 +39,26 @@
     margin: 0px 25px 0px 0px;
     float: left;
 }
-#answer, #hangUp, #reject, #connectCall, #mute {
+#answer, #hangUp, #reject, #mute {
     color: #FFF;
     background-color: #389400;
     width: 50px;
     height: 50px;
     float: right;
+    text-align: center;
+    font-size: 30px;
+    margin: 10px 0px 10px 0px;
+    border-radius: 25px 25px 25px 25px;
+    -moz-border-radius: 25px 25px 25px 25px;
+    -webkit-border-radius: 25px 25px 25px 25px;
+    cursor: pointer;
+    cursor: hand;
+}
+#connectCall{
+    color: #FFF;
+    background-color: #389400;
+    width: 50px;
+    height: 50px;
     text-align: center;
     font-size: 30px;
     margin: 10px 0px 10px 0px;
