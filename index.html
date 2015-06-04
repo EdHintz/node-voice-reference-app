@@ -71,17 +71,21 @@
     This reference app includes an example of voice calling in a web browser via WebRTC (see below).  Voice calling from a mobile device requires
     a mobile reference app (see <a href="https://github.com/bandwidthcom/catapult-reference-app-voice-android">Android</a>, <a href="https://github.com/bandwidthcom/catapult-reference-app-voice-ios">iOS</a>) running on the device.
 </p>
-					<hr>
-
+<hr>
 <h2>Run the App</h2>
-<p>Type in a name below to begin voice calling from your web browser.  You will also see the authorization token, endpoint, and SIP configuration data.</p>
+<p>Type in a name below to begin voice calling from your web browser.  The following will happen you press the Sign In button is the following:
+    <ol>
+       <li>A new endpoint is configured in the Bandwidth Application Platform or an existing endpoint you created with this app is used.</li>
+       <li>You will be registered with the Bandwidth Application platform using an authorization token.  This allows you to make and receive phone calls</li>
+       <li>You will also see the authorization token, endpoint, and SIP configuration data for your reference to use in other endpoints/clients.</li>
+    </o>
+</p>
 <div class="login-form">
     <h3>Sign In</h3>
     <form action="login" method="post">
         <input type="text" name="userName" placeholder="User name">
         <input type="submit" name="login" value="Sign In" class="login login-submit">
     </form>
-    Will create user if needed.
 </div>
 
 		<!-- JQuery scripts -->
