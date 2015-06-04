@@ -47,7 +47,9 @@ body { padding-top: 70px; }
 
 .navbar-fixed-top .navbar-brand { padding: 15px 0 15px 15px; }
 
-
+hr {
+    clear: both !important;
+}
 
 /**
  * At mid to wide screen, padding can be added around the branding 
