@@ -14,11 +14,13 @@ var Promise = require("bluebird");
 var server = new Hapi.Server(); //server instance
 
 // configure Catapult API
-catapult.Client.globalOptions.apiEndPoint = "https://api.stage.catapult.inetwork.com";
+if(config.catapultBase){
+	catapult.Client.globalOptions.apiEndPoint = config.catapultBase;
+}
+
 catapult.Client.globalOptions.userId = config.catapultUserId;
 catapult.Client.globalOptions.apiToken = config.catapultApiToken;
 catapult.Client.globalOptions.apiSecret = config.catapultApiSecret;
-catapult.Client.globalOptions.apiEndPoint = "https://api.stage.catapult.inetwork.com";
 //wrap Catapult API functions. Make them thenable (i.e. they will use Promises intead of callbacks)
 var Application = thenifyAll(catapult.Application);
 var AvailableNumber = thenifyAll(catapult.AvailableNumber);
